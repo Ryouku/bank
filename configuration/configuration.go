@@ -42,6 +42,10 @@ var ImportPath = os.Getenv("GOPATH") + "/src/github.com/bvnk/bank/"
 //configPath must be an absolute path
 var configPath = ImportPath + "config.json"
 
+func SetConfigPath(path string) {
+	configPath = path
+}
+
 func LoadConfig() (configuration Configuration, err error) {
 
 	workingDir, err := os.Getwd()
@@ -67,8 +71,6 @@ func LoadConfig() (configuration Configuration, err error) {
 		workingDir = regexp.MustCompile(".*github").ReplaceAllString(workingDir, "github")
 		ImportPath = os.Getenv("GOPATH") + "/src/" + regexp.MustCompile("/bank/.*").ReplaceAllString(workingDir, "/bank/")
 	}
-
-	var configPath = ImportPath + "config.json"
 
 	// Get config
 	file, _ := os.Open(configPath)

@@ -19,15 +19,17 @@ const (
 	HTTP_PORT = "8443"
 )
 
+var logPath *string
+
 func main() {
-	argClientServer := "http"
-	// http server is default mode
+	argClientServer := flag.String("mode", "server", "Mode to run the service in")
+	configPath := flag.String("configPath", "/etc/bvnk/config.json", "Config path absolute location. Default /etc/bvnk/config.json")
+	logPath = flag.String("logPath", "/var/log/bvnk/bank.log", "Log path absolute location. Default /var/log/bvnk/bank.log")
+	flag.Parse()
 
-	if flag.Arg(0) != "" {
-		argClientServer = flag.Arg(0)
-	}
+	configuration.SetConfigPath(*configPath)
 
-	err := parseArguments(argClientServer)
+	err := parseArguments(*argClientServer)
 	if err != nil {
 		log.Fatalf("Error starting, err: %v\n", err)
 	}
@@ -70,7 +72,7 @@ func parseArguments(arg string) (err error) {
 
 // Simple log function for logging to a file
 func bLog(logLevel int, message string, functionName string) (err error) {
-	f, err := os.OpenFile("./bvnk.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(*logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
