@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bvnk/bank/configuration"
+	geo "github.com/paulmach/go.geo"
 	"github.com/shopspring/decimal"
 )
 
@@ -22,7 +23,8 @@ func TestSavePainTransaction(t *testing.T) {
 
 	sender := AccountHolder{"accountNumSender", "bankNumSender"}
 	receiver := AccountHolder{"accountNumReceiver", "bankNumReceiver"}
-	trans := PAINTrans{101, sender, receiver, decimal.NewFromFloat(0.), decimal.NewFromFloat(0.), 10., 10., "Test desc", "approved"}
+	p := geo.NewPoint(42.25, 120.2)
+	trans := PAINTrans{1, 101, sender, receiver, decimal.NewFromFloat(0.), decimal.NewFromFloat(0.), *p, "Test desc", "approved", 123123}
 
 	err := savePainTransaction(trans)
 	if err != nil {
@@ -42,7 +44,8 @@ func BenchmarkSavePainTransaction(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		sender := AccountHolder{"accountNumSender", "bankNumSender"}
 		receiver := AccountHolder{"accountNumReceiver", "bankNumReceiver"}
-		trans := PAINTrans{101, sender, receiver, decimal.NewFromFloat(0.), decimal.NewFromFloat(0.), 10., 10., "Test desc", "approved"}
+		p := geo.NewPoint(42.25, 120.2)
+		trans := PAINTrans{1, 101, sender, receiver, decimal.NewFromFloat(0.), decimal.NewFromFloat(0.), *p, "Test desc", "approved", 123123}
 
 		_ = savePainTransaction(trans)
 		_ = removePainTransaction(trans)
