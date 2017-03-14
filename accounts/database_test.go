@@ -607,7 +607,24 @@ func TestGetSingleAccountNumberByID(t *testing.T) {
 	ti := time.Now()
 	sqlTime := int32(ti.Unix())
 
-	err := doCreateAccount(sqlTime, &accountDetail, &accountHolderDetail)
+	// Make sure DB is clean
+	err := doDeleteAccount(&accountDetail)
+	if err != nil {
+		t.Errorf("GetSingleAccountNumberByID DeleteAccount does not pass. Looking for %v, got %v", nil, err)
+	}
+
+	err = doDeleteAccountUser(&accountHolderDetail)
+	if err != nil {
+		t.Errorf("GetSingleAccountNumberByID DeleteAccountMeta does not pass. Looking for %v, got %v", nil, err)
+	}
+
+	err = doDeleteAccountUserAccounts(&accountHolderDetail)
+	if err != nil {
+		t.Errorf("GetSingleAccountNumberByID doDeleteAccountUserAccounts does not pass. Looking for %v, got %v", nil, err)
+	}
+
+	// Start tests
+	err = doCreateAccount(sqlTime, &accountDetail, &accountHolderDetail)
 	if err != nil {
 		t.Errorf("GetSingleAccountNumberByID CreateAccount does not pass. Looking for %v, got %v", nil, err)
 	}
@@ -615,6 +632,12 @@ func TestGetSingleAccountNumberByID(t *testing.T) {
 	err = doCreateAccountUser(sqlTime, &accountHolderDetail, &accountDetail)
 	if err != nil {
 		t.Errorf("GetSingleAccountNumberByID CreateAccountMeta does not pass. Looking for %v, got %v", nil, err)
+	}
+
+	// Link account to user account
+	err = doCreateAccountUserAccount(sqlTime, &accountHolderDetail, &accountDetail)
+	if err != nil {
+		t.Errorf("GetSingleAccountNumberByID doCreateAccountUserAccount does not pass. Looking for %v, got %v", nil, err)
 	}
 
 	// Do get account call
@@ -638,6 +661,11 @@ func TestGetSingleAccountNumberByID(t *testing.T) {
 	err = doDeleteAccountUser(&accountHolderDetail)
 	if err != nil {
 		t.Errorf("GetSingleAccountNumberByID DeleteAccountMeta does not pass. Looking for %v, got %v", nil, err)
+	}
+
+	err = doDeleteAccountUserAccounts(&accountHolderDetail)
+	if err != nil {
+		t.Errorf("GetSingleAccountNumberByID doDeleteAccountUserAccounts does not pass. Looking for %v, got %v", nil, err)
 	}
 }
 
