@@ -30,7 +30,7 @@ func RunHttpServer() (err error) {
 
 	router := NewRouter()
 
-	err = http.ListenAndServeTLS(":"+Config.HttpPort, configuration.ImportPath+"certs/"+Config.FQDN+".pem", configuration.ImportPath+"certs/"+Config.FQDN+".key", router)
+	err = http.ListenAndServeTLS(":"+Config.HttpPort, Config.SSLCertPath, Config.SSLKeyPath, router)
 	//err = http.ListenAndServeTLS(":8443", "certs/thebankoftoday.com.crt", "certs/thebankoftoday.com.key", router)
 	fmt.Println(err)
 	bLog(4, err.Error(), trace())

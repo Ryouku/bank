@@ -10,6 +10,8 @@
     "RedisPort"         :   "redis_port",
     "FQDN"              :   "your_domain",
     "HttpPort"      	:   "8443",
+    "SSLCertPath"      	:   "/path/to/cert/",
+    "SSLKeyPath"      	:   "/path/to/key/",
     "PasswordSalt"      :   "strong_salt",
     "ApplePushCert"    	:   "relative/path/to/pushcert",
     "ApplePushKey"     	:   "relative/path/to/pushkey"

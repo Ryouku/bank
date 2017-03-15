@@ -33,7 +33,7 @@ func runServer(mode string) (message string, err error) {
 
 	switch mode {
 	case "tls":
-		cert, err := tls.LoadX509KeyPair(configuration.ImportPath+"certs/server.pem", configuration.ImportPath+"certs/server.key")
+		cert, err := tls.LoadX509KeyPair(Config.SSLCertPath, Config.SSLKeyPath)
 		if err != nil {
 			return "", err
 		}

@@ -32,6 +32,8 @@ type Configuration struct {
 	Db            *sql.DB
 	Redis         *redis.Client
 	PushEnv       string
+	SSLCertPath   string
+	SSLKeyPath    string
 	ApplePushCert string
 	ApplePushKey  string
 }
