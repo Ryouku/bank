@@ -43,14 +43,14 @@ func runServer(mode string) (message string, err error) {
 		config.Rand = rand.Reader
 
 		// Listen for incoming connections.
-		l, err := tls.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT, &config)
+		l, err := tls.Listen(CONN_TYPE, CONN_HOST+":"+Config.HttpPort, &config)
 		if err != nil {
 			return "", err
 		}
 
 		// Close the listener when the application closes.
 		defer l.Close()
-		bLog(0, "Listening on secure "+CONN_HOST+":"+CONN_PORT, trace())
+		bLog(0, "Listening on secure "+CONN_HOST+":"+Config.HttpPort, trace())
 		for {
 			// Listen for an incoming connection.
 			conn, err := l.Accept()
@@ -62,14 +62,14 @@ func runServer(mode string) (message string, err error) {
 		}
 	case "no-tls":
 		// Listen for incoming connections.
-		l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+		l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+Config.HttpPort)
 		if err != nil {
 			return "", err
 		}
 
 		// Close the listener when the application closes.
 		defer l.Close()
-		bLog(0, "Listening on unsecure "+CONN_HOST+":"+CONN_PORT, trace())
+		bLog(0, "Listening on unsecure "+CONN_HOST+":"+Config.HttpPort, trace())
 		for {
 			// Listen for an incoming connection.
 			conn, err := l.Accept()
