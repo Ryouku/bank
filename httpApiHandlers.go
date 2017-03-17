@@ -233,7 +233,7 @@ func TransactionCreditInitiation(w http.ResponseWriter, r *http.Request) {
 
 func TransactionDepositInitiation(w http.ResponseWriter, r *http.Request) {
 	basicAuthUser, basicAuthPassword, ok := r.BasicAuth()
-	if ok != true {
+	if !ok {
 		Response("", errors.New("httpApiHandlers.TransactionDepositInitiation: Error retrieving auth headers"), w, r)
 		return
 	}
