@@ -332,7 +332,7 @@ func adminDepositInitiation(painType int64, data []string) (result string, err e
 	}
 
 	// Check if recipient valid
-	_, err := accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	_, err = accounts.GetAccountByAccountNumber(receiver.AccountNumber)
 	if err != nil {
 		return "", errors.New("payments.adminDepositInitiation: Recipient user not found")
 	}
