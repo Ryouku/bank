@@ -350,8 +350,8 @@ func CheckBasicAuth(username string, password string) (err error) {
 	confUser := Config.HttpAuthUser
 	confPass := Config.HttpAuthPass
 
-	if (confUser != username) && (confPass != password) {
-		return errors.New("appauth.CheckBasicAuth: Basic Auth incorrect. Access denied. ")
+	if (confUser != username) || (confPass != password) {
+		return errors.New("appauth.CheckBasicAuth: Basic Auth incorrect. Access denied.")
 	}
 
 	return

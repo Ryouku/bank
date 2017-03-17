@@ -133,6 +133,12 @@ func painCreditTransferInitiation(painType int64, data []string) (result string,
 		return "", errors.New("payments.painCreditTransferInitiation: Sender not valid")
 	}
 
+	// Check if recipient valid
+	_, err = accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	if err != nil {
+		return "", errors.New("payments.painCreditTransferInitiation: Recipient user not found")
+	}
+
 	lat, err := strconv.ParseFloat(data[6], 64)
 	if err != nil {
 		return "", errors.New("payments.painCreditTransferInitiation: Could not parse coordinates into float")
@@ -227,6 +233,12 @@ func customerDepositInitiation(painType int64, data []string) (result string, er
 		return "", errors.New("payments.customerDepositInitiation: Sender not valid")
 	}
 
+	// Check if recipient valid
+	_, err = accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	if err != nil {
+		return "", errors.New("payments.customerDepositInitiation: Recipient user not found")
+	}
+
 	lat, err := strconv.ParseFloat(data[5], 64)
 	if err != nil {
 		return "", errors.New("payments.customerDepositInitiation: Could not parse coordinates into float")
@@ -317,6 +329,12 @@ func adminDepositInitiation(painType int64, data []string) (result string, err e
 	transactionAmountDecimal, err := decimal.NewFromString(trAmt)
 	if err != nil {
 		return "", errors.New("payments.adminDepositInitiation: Could not convert transaction amount to decimal. " + err.Error())
+	}
+
+	// Check if recipient valid
+	_, err := accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	if err != nil {
+		return "", errors.New("payments.adminDepositInitiation: Recipient user not found")
 	}
 
 	lat, err := strconv.ParseFloat(data[5], 64)
