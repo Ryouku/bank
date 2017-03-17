@@ -803,3 +803,16 @@ func compareUpdateMerchantWithCurrentMerchant(merchantUpdate *MerchantDetails, m
 		merchantUpdate.ContactEmail = merchantCurrent.ContactEmail
 	}
 }
+
+func GetAccountByAccountNumber(accountNumber string) (accountDetails AccountDetails, err error) {
+	// This function receives just account number, not bank number
+	// Trim any @
+	accountNumber = strings.Replace(accountNumber, "@", "", -1)
+	accountDetails, err = getAccountDetails(accountNumber)
+
+	if (accountDetails == AccountDetails{}) {
+		return AccountDetails{}, errors.New("accounts.GetAccountByAccountNumber: Account not found")
+	}
+
+	return
+}

@@ -232,7 +232,18 @@ func TransactionCreditInitiation(w http.ResponseWriter, r *http.Request) {
 }
 
 func TransactionDepositInitiation(w http.ResponseWriter, r *http.Request) {
-	token, err := getTokenFromHeader(w, r)
+	basicAuthUser, basicAuthPassword, ok := r.BasicAuth()
+	if !ok {
+		Response("", errors.New("httpApiHandlers.TransactionDepositInitiation: Error retrieving auth headers"), w, r)
+		return
+	}
+
+	if (basicAuthUser == "") || (basicAuthPassword == "") {
+		Response("", errors.New("httpApiHandlers.TransactionDepositInitiation: Auth must be set"), w, r)
+		return
+	}
+
+	err := appauth.CheckBasicAuth(basicAuthUser, basicAuthPassword)
 	if err != nil {
 		Response("", err, w, r)
 		return
@@ -244,7 +255,7 @@ func TransactionDepositInitiation(w http.ResponseWriter, r *http.Request) {
 	lon := r.FormValue("Lon")
 	desc := r.FormValue("Desc")
 
-	response, err := transactions.ProcessPAIN([]string{token, "pain", "1000", accountDetails, amount, lat, lon, desc})
+	response, err := transactions.ProcessPAIN([]string{"", "pain", "1000", accountDetails, amount, lat, lon, desc, basicAuthUser, basicAuthPassword})
 	Response(response, err, w, r)
 	return
 }

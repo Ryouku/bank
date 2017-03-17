@@ -29,6 +29,8 @@ type Configuration struct {
 	PasswordSalt  string
 	FQDN          string
 	HttpPort      string
+	HttpAuthUser  string
+	HttpAuthPass  string
 	Db            *sql.DB
 	Redis         *redis.Client
 	PushEnv       string

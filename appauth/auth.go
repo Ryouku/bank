@@ -3,7 +3,6 @@ package appauth
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -287,7 +286,6 @@ func RemoveToken(token string) (result string, err error) {
 func CheckToken(token string) (err error) {
 	//TEST 0~appauth~480e67e3-e2c9-48ee-966c-8d251474b669
 	user, err := Config.Redis.Get(token).Result()
-	fmt.Printf("user from redis: %v\n", user)
 
 	if err == redis.Nil {
 		return errors.New("appauth.CheckToken: Token not found. " + err.Error())
@@ -343,6 +341,17 @@ func getUserPasswordSaltFromUID(user string) (hashedPassword string, userSalt st
 			return "", "", errors.New("appauth.CreateToken: Could not retreive account details")
 		}
 		count++
+	}
+
+	return
+}
+
+func CheckBasicAuth(username string, password string) (err error) {
+	confUser := Config.HttpAuthUser
+	confPass := Config.HttpAuthPass
+
+	if (confUser != username) || (confPass != password) {
+		return errors.New("appauth.CheckBasicAuth: Basic Auth incorrect. Access denied.")
 	}
 
 	return

@@ -84,7 +84,8 @@ func ProcessPAIN(data []string) (result interface{}, err error) {
 		if len(data) < 8 {
 			return "", errors.New("payments.ProcessPAIN: Not all data is present.")
 		}
-		result, err = customerDepositInitiation(painType, data)
+		// For now we exclude customer deposits
+		result, err = adminDepositInitiation(painType, data)
 		if err != nil {
 			return "", errors.New("payments.ProcessPAIN: " + err.Error())
 		}
@@ -130,6 +131,12 @@ func painCreditTransferInitiation(painType int64, data []string) (result string,
 	err = accounts.CheckUserAccountValidFromToken(tokenUser, sender.AccountNumber)
 	if err != nil {
 		return "", errors.New("payments.painCreditTransferInitiation: Sender not valid")
+	}
+
+	// Check if recipient valid
+	_, err = accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	if err != nil {
+		return "", errors.New("payments.painCreditTransferInitiation: Recipient user not found")
 	}
 
 	lat, err := strconv.ParseFloat(data[6], 64)
@@ -226,6 +233,12 @@ func customerDepositInitiation(painType int64, data []string) (result string, er
 		return "", errors.New("payments.customerDepositInitiation: Sender not valid")
 	}
 
+	// Check if recipient valid
+	_, err = accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	if err != nil {
+		return "", errors.New("payments.customerDepositInitiation: Recipient user not found")
+	}
+
 	lat, err := strconv.ParseFloat(data[5], 64)
 	if err != nil {
 		return "", errors.New("payments.customerDepositInitiation: Could not parse coordinates into float")
@@ -295,6 +308,57 @@ func listTransactions(data []string) (result []PAINTrans, err error) {
 	if err != nil {
 		return []PAINTrans{}, errors.New("payments.ListTransactions: " + err.Error())
 	}
+
+	return
+}
+
+func adminDepositInitiation(painType int64, data []string) (result string, err error) {
+	// Validate input
+	// Sender is bank
+	sender, err := parseAccountHolder("0@0")
+	if err != nil {
+		return "", errors.New("payments.CustomerDepositInitiation: " + err.Error())
+	}
+
+	receiver, err := parseAccountHolder(data[3])
+	if err != nil {
+		return "", errors.New("payments.CustomerDepositInitiation: " + err.Error())
+	}
+
+	trAmt := strings.TrimRight(data[4], "\x00")
+	transactionAmountDecimal, err := decimal.NewFromString(trAmt)
+	if err != nil {
+		return "", errors.New("payments.adminDepositInitiation: Could not convert transaction amount to decimal. " + err.Error())
+	}
+
+	// Check if recipient valid
+	_, err = accounts.GetAccountByAccountNumber(receiver.AccountNumber)
+	if err != nil {
+		return "", errors.New("payments.adminDepositInitiation: Recipient user not found")
+	}
+
+	lat, err := strconv.ParseFloat(data[5], 64)
+	if err != nil {
+		return "", errors.New("payments.adminDepositInitiation: Could not parse coordinates into float")
+	}
+	lon, err := strconv.ParseFloat(data[6], 64)
+	if err != nil {
+		return "", errors.New("payments.adminDepositInitiation: Could not parse coordinates into float")
+	}
+	desc := data[7]
+
+	// Issue deposit
+	// @TODO This flow show be fixed. Maybe have banks approve deposits before initiation, or
+	// immediate approval below a certain amount subject to rate limiting
+	geo := *geo.NewPoint(lat, lon)
+	transaction := PAINTrans{0, painType, sender, receiver, transactionAmountDecimal, decimal.NewFromFloat(TRANSACTION_FEE), geo, desc, "approved", 0}
+	// Save transaction
+	result, err = processPAINTransaction(transaction)
+	if err != nil {
+		return "", errors.New("payments.CustomerDepositInitiation: " + err.Error())
+	}
+
+	go push.SendNotification(receiver.AccountNumber, "💸 Deposit received!", 1, "default")
 
 	return
 }
