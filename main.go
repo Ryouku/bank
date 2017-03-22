@@ -139,7 +139,14 @@ func bLog(logLevel int, message string, functionName string) (err error) {
 func trace() (funcTrace string) {
 	pc := make([]uintptr, 10) // at least 1 entry needed
 	runtime.Callers(2, pc)
-	f := runtime.FuncForPC(pc[0])
-	file, line := f.FileLine(pc[0])
-	return fmt.Sprintf("%s:%d %s", file, line, f.Name())
+	// Go two levels deep
+	funcTrace = ""
+	for i := 0; i < 2; i++ {
+		if pc[i] != 0 {
+			f := runtime.FuncForPC(pc[i])
+			file, line := f.FileLine(pc[i])
+			funcTrace = funcTrace + fmt.Sprintf("%s:%d %s | ", file, line, f.Name())
+		}
+	}
+	return
 }

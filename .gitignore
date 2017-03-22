@@ -8,3 +8,5 @@ bank
 *.crt
 
 bvnk.log
+
+*.swp
