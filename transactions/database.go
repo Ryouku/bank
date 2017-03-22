@@ -15,7 +15,7 @@ func SetConfig(config *configuration.Configuration) {
 	Config = *config
 }
 
-func savePainTransaction(transaction PAINTrans) (err error) {
+func savePainTransaction(transaction PAINTrans) (id int64, err error) {
 	// Prepare statement for inserting data
 	// Construct geoText. These values are already cleared
 	geoText := transaction.Geo.ToWKT()
@@ -24,7 +24,7 @@ func savePainTransaction(transaction PAINTrans) (err error) {
 
 	stmtIns, err := Config.Db.Prepare(insertStatement)
 	if err != nil {
-		return errors.New("payments.savePainTransaction: " + err.Error())
+		return 0, errors.New("payments.savePainTransaction: " + err.Error())
 	}
 	defer stmtIns.Close() // Close the statement when we leave main() / the program terminates
 
@@ -35,11 +35,13 @@ func savePainTransaction(transaction PAINTrans) (err error) {
 	// The feePerc is a percentage, convert to amount
 	feeAmount := transaction.Amount.Mul(transaction.Fee)
 
-	_, err = stmtIns.Exec("pain", transaction.PainType, transaction.Sender.AccountNumber, transaction.Sender.BankNumber, transaction.Receiver.AccountNumber, transaction.Receiver.BankNumber,
+	res, err := stmtIns.Exec("pain", transaction.PainType, transaction.Sender.AccountNumber, transaction.Sender.BankNumber, transaction.Receiver.AccountNumber, transaction.Receiver.BankNumber,
 		transaction.Amount, feeAmount, transaction.Desc, transaction.Timestamp, transaction.Status, geoText)
 
+	id, _ = res.LastInsertId()
+
 	if err != nil {
-		return errors.New("payments.savePainTransaction: " + err.Error())
+		return 0, errors.New("payments.savePainTransaction: " + err.Error())
 	}
 
 	return
