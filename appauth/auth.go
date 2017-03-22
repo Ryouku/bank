@@ -113,7 +113,8 @@ func CreateUserPassword(user string, clearTextPassword string) (result string, e
 	}
 
 	if count > 0 {
-		return "", errors.New("appauth.CreateUserPassword: Account already exists: " + authUser)
+		// Return authUser with no error
+		return authUser, nil
 	}
 
 	// Check password length
