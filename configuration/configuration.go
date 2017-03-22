@@ -102,6 +102,9 @@ func loadMySQL(configuration *Configuration) (err error) {
 		return errors.New("configuration.loadMySQL: Could not connect to database")
 	}
 
+	// Set max open connections
+	configuration.Db.SetMaxOpenConns(100)
+
 	return
 }
 
