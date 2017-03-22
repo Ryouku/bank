@@ -217,48 +217,25 @@ func doDeleteAccountUserAccounts(accountHolderDetails *AccountHolderDetails) (er
 }
 
 func getAccountDetails(id string) (accountDetails AccountDetails, err error) {
-	rows, err := Config.Db.Query("SELECT `accountNumber`, `bankNumber`, `accountHolderName`, `accountBalance`, `overdraft`, `availableBalance` FROM `accounts` WHERE `accountNumber` = ?", id)
-	if err != nil {
-		return AccountDetails{}, errors.New("accounts.getAccountDetails: " + err.Error())
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		err := rows.Scan(&accountDetails.AccountNumber, &accountDetails.BankNumber, &accountDetails.AccountHolderName, &accountDetails.AccountBalance, &accountDetails.Overdraft, &accountDetails.AvailableBalance)
-		if err != nil {
-			break
-		}
-		count++
-	}
-
-	if count == 0 {
+	err = Config.Db.QueryRow("SELECT `accountNumber`, `bankNumber`, `accountHolderName`, `accountBalance`, `overdraft`, `availableBalance` FROM `accounts` WHERE `accountNumber` = ?", id).Scan(&accountDetails.AccountNumber, &accountDetails.BankNumber, &accountDetails.AccountHolderName, &accountDetails.AccountBalance, &accountDetails.Overdraft, &accountDetails.AvailableBalance)
+	switch {
+	case err == sql.ErrNoRows:
 		return AccountDetails{}, errors.New("accounts.getAccountDetails: Account not found")
-	}
-
-	if count > 1 {
-		// There cannot be more than one account with the same accountNumber
-		return AccountDetails{}, errors.New("accounts.getAccountDetails: More than one account found")
+	case err != nil:
+		return AccountDetails{}, errors.New("accounts.getAccountDetails: " + err.Error())
 	}
 
 	return
 }
 
 func getAccountUser(id string) (accountDetails AccountHolderDetails, err error) {
-	rows, err := Config.Db.Query("SELECT `accountHolderGivenName`, `accountHolderFamilyName`, `accountHolderDateOfBirth`, `accountHolderIdentificationNumber`, `accountHolderContactNumber1`, `accountHolderContactNumber2`, `accountHolderEmailAddress`, `accountHolderAddressLine1`, `accountHolderAddressLine2`, `accountHolderAddressLine3`, `accountHolderPostalCode` FROM `accounts_users` WHERE `accountHolderIdentificationNumber` = ?", id)
-	if err != nil {
-		return AccountHolderDetails{}, errors.New("accounts.getAccountUser: " + err.Error())
-	}
-	defer rows.Close()
+	err = Config.Db.QueryRow("SELECT `accountHolderGivenName`, `accountHolderFamilyName`, `accountHolderDateOfBirth`, `accountHolderIdentificationNumber`, `accountHolderContactNumber1`, `accountHolderContactNumber2`, `accountHolderEmailAddress`, `accountHolderAddressLine1`, `accountHolderAddressLine2`, `accountHolderAddressLine3`, `accountHolderPostalCode` FROM `accounts_users` WHERE `accountHolderIdentificationNumber` = ?", id).Scan(&accountDetails.GivenName, &accountDetails.FamilyName, &accountDetails.DateOfBirth, &accountDetails.IdentificationNumber, &accountDetails.ContactNumber1, &accountDetails.ContactNumber2, &accountDetails.EmailAddress, &accountDetails.AddressLine1, &accountDetails.AddressLine2, &accountDetails.AddressLine3, &accountDetails.PostalCode)
 
-	count := 0
-	for rows.Next() {
-		if err := rows.Scan(&accountDetails.GivenName, &accountDetails.FamilyName, &accountDetails.DateOfBirth, &accountDetails.IdentificationNumber, &accountDetails.ContactNumber1, &accountDetails.ContactNumber2, &accountDetails.EmailAddress, &accountDetails.AddressLine1, &accountDetails.AddressLine2,
-			&accountDetails.AddressLine3, &accountDetails.PostalCode); err != nil {
-			//@TODO Throw error
-			break
-		}
-		count++
+	switch {
+	case err == sql.ErrNoRows:
+		return AccountHolderDetails{}, nil
+	case err != nil:
+		return AccountHolderDetails{}, errors.New("accounts.getAccountUser: " + err.Error())
 	}
 
 	return
@@ -375,19 +352,15 @@ func doAddAccountPushToken(accountNumber string, pushToken string, platform stri
 }
 
 func fetchAccountPushToken(accountNumber string, pushToken string, platform string) (pushTokenExists bool, err error) {
-	rows, err := Config.Db.Query("SELECT * FROM `accounts_push_tokens` WHERE `accountNumber` = ? AND `token` = ? AND `platform` = ?", accountNumber, pushToken, platform)
-	if err != nil {
+	err = Config.Db.QueryRow("SELECT `token` FROM `accounts_push_tokens` WHERE `accountNumber` = ? AND `token` = ? AND `platform` = ?", accountNumber, pushToken, platform).Scan(&pushToken)
+	switch {
+	case err == sql.ErrNoRows:
+		return false, nil
+	case err != nil:
 		return false, errors.New("accounts.fetchAccountPushToken: " + err.Error())
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		if err := rows.Scan(&pushToken); err != nil {
-			pushTokenExists = true
-			break
-		}
-	}
-
+	pushTokenExists = true
 	return
 }
 
@@ -575,35 +548,31 @@ func updateMerchant(merchantDetails *MerchantDetails) (err error) {
 }
 
 func getMerchantFromMerchantID(merchantID string) (merchantDetails MerchantDetails, err error) {
-	rows, err := Config.Db.Query("SELECT `merchantID`, `merchantName`, `merchantDescription`, `merchantContactGivenName`, `merchantContactFamilyName`, `merchantAddressLine1`, `merchantAddressLine2`, `merchantAddressLine3`, `merchantCountry`, `merchantPostalCode`, `merchantBusinessSector`, `merchantWebsite`, `merchantContactPhone`, `merchantContactFax`, `merchantContactEmail`, `merchantLogo`, `timestamp` FROM `merchants` WHERE `merchantID` = ?", merchantID)
-	if err != nil {
-		return MerchantDetails{}, errors.New("accounts.getMerchantFromMerchantID: " + err.Error())
-	}
-	defer rows.Close()
+	err = Config.Db.QueryRow("SELECT `merchantID`, `merchantName`, `merchantDescription`, `merchantContactGivenName`, `merchantContactFamilyName`, `merchantAddressLine1`, `merchantAddressLine2`, `merchantAddressLine3`, `merchantCountry`, `merchantPostalCode`, `merchantBusinessSector`, `merchantWebsite`, `merchantContactPhone`, `merchantContactFax`, `merchantContactEmail`, `merchantLogo`, `timestamp` FROM `merchants` WHERE `merchantID` = ?", merchantID).Scan(
+		&merchantDetails.ID,
+		&merchantDetails.Name,
+		&merchantDetails.Description,
+		&merchantDetails.ContactGivenName,
+		&merchantDetails.ContactFamilyName,
+		&merchantDetails.AddressLine1,
+		&merchantDetails.AddressLine2,
+		&merchantDetails.AddressLine3,
+		&merchantDetails.Country,
+		&merchantDetails.PostalCode,
+		&merchantDetails.BusinessSector,
+		&merchantDetails.Website,
+		&merchantDetails.ContactPhone,
+		&merchantDetails.ContactFax,
+		&merchantDetails.ContactEmail,
+		&merchantDetails.Logo,
+		&merchantDetails.Timestamp,
+	)
 
-	for rows.Next() {
-		if err := rows.Scan(
-			&merchantDetails.ID,
-			&merchantDetails.Name,
-			&merchantDetails.Description,
-			&merchantDetails.ContactGivenName,
-			&merchantDetails.ContactFamilyName,
-			&merchantDetails.AddressLine1,
-			&merchantDetails.AddressLine2,
-			&merchantDetails.AddressLine3,
-			&merchantDetails.Country,
-			&merchantDetails.PostalCode,
-			&merchantDetails.BusinessSector,
-			&merchantDetails.Website,
-			&merchantDetails.ContactPhone,
-			&merchantDetails.ContactFax,
-			&merchantDetails.ContactEmail,
-			&merchantDetails.Logo,
-			&merchantDetails.Timestamp,
-		); err != nil {
-			return MerchantDetails{}, errors.New("accounts.getMerchantFromMerchantID: " + err.Error())
-			break
-		}
+	switch {
+	case err == sql.ErrNoRows:
+		return MerchantDetails{}, errors.New("accounts.getMerchantFromMerchantID: No merchant found")
+	case err != nil:
+		return MerchantDetails{}, errors.New("accounts.getMerchantFromMerchantID: " + err.Error())
 	}
 
 	return

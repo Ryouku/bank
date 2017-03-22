@@ -1,6 +1,7 @@
 package appauth
 
 import (
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"math/rand"
@@ -227,21 +228,15 @@ func RemoveUserPassword(user string, clearTextPassword string) (result string, e
 }
 
 func CreateToken(authUser string, password string) (token string, err error) {
-	rows, err := Config.Db.Query("SELECT `password`, `salt`, `accountHolderIdentificationNumber` FROM `accounts_user_auth` WHERE `authUser` = ?", authUser)
-	if err != nil {
-		return "", errors.New("appauth.CreateToken: Error with select query. " + err.Error())
-	}
-	defer rows.Close()
-
-	count := 0
 	hashedPassword := ""
 	userSalt := ""
 	userID := ""
-	for rows.Next() {
-		if err := rows.Scan(&hashedPassword, &userSalt, &userID); err != nil {
-			return "", errors.New("appauth.CreateToken: Could not retreive account details")
-		}
-		count++
+	err = Config.Db.QueryRow("SELECT `password`, `salt`, `accountHolderIdentificationNumber` FROM `accounts_user_auth` WHERE `authUser` = ?", authUser).Scan(&hashedPassword, &userSalt, &userID)
+	switch {
+	case err == sql.ErrNoRows:
+		break
+	case err != nil:
+		return "", errors.New("appauth.CreateToken: Could not retreive account details: " + err.Error())
 	}
 
 	// Generate hash
@@ -330,18 +325,12 @@ func RandStringBytes(n int) string {
 }
 
 func getUserPasswordSaltFromUID(user string) (hashedPassword string, userSalt string, err error) {
-	rows, err := Config.Db.Query("SELECT `password`, `salt` FROM `accounts_user_auth` WHERE `accountHolderIdentificationNumber` = ?", user)
-	if err != nil {
-		return "", "", errors.New("appauth.CreateToken: Error with select query. " + err.Error())
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		if err := rows.Scan(&hashedPassword, &userSalt); err != nil {
-			return "", "", errors.New("appauth.CreateToken: Could not retreive account details")
-		}
-		count++
+	err = Config.Db.QueryRow("SELECT `password`, `salt` FROM `accounts_user_auth` WHERE `accountHolderIdentificationNumber` = ?", user).Scan(&hashedPassword, &userSalt)
+	switch {
+	case err == sql.ErrNoRows:
+		return "", "", errors.New("appauth.CreateToken: Account details not found")
+	case err != nil:
+		return "", "", errors.New("appauth.CreateToken: Could not retreive account details: " + err.Error())
 	}
 
 	return

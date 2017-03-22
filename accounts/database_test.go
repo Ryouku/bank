@@ -232,7 +232,7 @@ func TestGetAccount(t *testing.T) {
 
 	err = doCreateAccountUser(sqlTime, &accountHolderDetail, &accountDetail)
 	if err != nil {
-		t.Errorf("GetAccount CreateAccountMeta does not pass. Looking for %v, got %v", nil, err)
+		t.Errorf("GetAccount CreateAccountUser does not pass. Looking for %v, got %v", nil, err)
 	}
 
 	fmt.Printf("Account: %v\n", accountDetail)
