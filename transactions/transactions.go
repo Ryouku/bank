@@ -163,10 +163,12 @@ func painCreditTransferInitiation(painType int64, data []string) (result string,
 	}
 
 	// Save transaction
-	result, err = processPAINTransaction(transaction)
+	transactionId, err := processPAINTransaction(transaction)
 	if err != nil {
 		return "", errors.New("payments.painCreditTransferInitiation: " + err.Error())
 	}
+
+	result = strconv.FormatInt(transactionId, 10)
 
 	go push.SendNotification(sender.AccountNumber, "💸 Payment sent!", 1, "default")
 	go push.SendNotification(receiver.AccountNumber, "💸 Payment received!", 1, "default")
@@ -174,20 +176,20 @@ func painCreditTransferInitiation(painType int64, data []string) (result string,
 	return
 }
 
-func processPAINTransaction(transaction PAINTrans) (result string, err error) {
+func processPAINTransaction(transaction PAINTrans) (transactionId int64, err error) {
 	// Test: pain~1~1b2ca241-0373-4610-abad-da7b06c50a7b@~181ac0ae-45cb-461d-b740-15ce33e4612f@~20
 
 	// Save in transaction table
-	err = savePainTransaction(transaction)
+	transactionId, err = savePainTransaction(transaction)
 	if err != nil {
-		return "", errors.New("payments.processPAINTransaction: " + err.Error())
+		return 0, errors.New("payments.processPAINTransaction: " + err.Error())
 	}
 
 	// Amend sender and receiver accounts
 	// Amend bank's account with fee addition
 	err = updateAccounts(transaction)
 	if err != nil {
-		return "", errors.New("payments.processPAINTransaction: " + err.Error())
+		return 0, errors.New("payments.processPAINTransaction: " + err.Error())
 	}
 
 	return
@@ -255,10 +257,12 @@ func customerDepositInitiation(painType int64, data []string) (result string, er
 	geo := *geo.NewPoint(lat, lon)
 	transaction := PAINTrans{0, painType, sender, receiver, transactionAmountDecimal, decimal.NewFromFloat(TRANSACTION_FEE), geo, desc, "approved", 0}
 	// Save transaction
-	result, err = processPAINTransaction(transaction)
+	transactionId, err := processPAINTransaction(transaction)
 	if err != nil {
 		return "", errors.New("payments.CustomerDepositInitiation: " + err.Error())
 	}
+
+	result = strconv.FormatInt(transactionId, 10)
 
 	go push.SendNotification(receiver.AccountNumber, "💸 Deposit received!", 1, "default")
 
@@ -353,10 +357,12 @@ func adminDepositInitiation(painType int64, data []string) (result string, err e
 	geo := *geo.NewPoint(lat, lon)
 	transaction := PAINTrans{0, painType, sender, receiver, transactionAmountDecimal, decimal.NewFromFloat(TRANSACTION_FEE), geo, desc, "approved", 0}
 	// Save transaction
-	result, err = processPAINTransaction(transaction)
+	transactionId, err := processPAINTransaction(transaction)
 	if err != nil {
 		return "", errors.New("payments.CustomerDepositInitiation: " + err.Error())
 	}
+
+	result = strconv.FormatInt(transactionId, 10)
 
 	go push.SendNotification(receiver.AccountNumber, "💸 Deposit received!", 1, "default")
 

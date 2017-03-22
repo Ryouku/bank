@@ -1,6 +1,7 @@
 package transactions
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -26,9 +27,13 @@ func TestSavePainTransaction(t *testing.T) {
 	p := geo.NewPoint(42.25, 120.2)
 	trans := PAINTrans{1, 101, sender, receiver, decimal.NewFromFloat(0.), decimal.NewFromFloat(0.), *p, "Test desc", "approved", 123123}
 
-	err := savePainTransaction(trans)
+	id, err := savePainTransaction(trans)
 	if err != nil {
 		t.Errorf("DoSavePainTransaction does not pass. Looking for %v, got %v", nil, err)
+	}
+
+	if reflect.TypeOf(id).Kind() != reflect.Int64 {
+		t.Errorf("DoSavePainTransaction does not pass. Expected integer return. Looking for %v, got %v", "int64", reflect.TypeOf(id).Kind())
 	}
 
 	err = removePainTransaction(trans)
@@ -47,7 +52,7 @@ func BenchmarkSavePainTransaction(b *testing.B) {
 		p := geo.NewPoint(42.25, 120.2)
 		trans := PAINTrans{1, 101, sender, receiver, decimal.NewFromFloat(0.), decimal.NewFromFloat(0.), *p, "Test desc", "approved", 123123}
 
-		_ = savePainTransaction(trans)
+		_, _ = savePainTransaction(trans)
 		_ = removePainTransaction(trans)
 	}
 }
